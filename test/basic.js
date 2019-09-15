@@ -10,17 +10,21 @@ t.test('writes with empty end()', t => {
     sawData = true
     t.equal(data.toString(), 'hello, world\n')
   })
-  c.on('end', () => {
-    t.ok(sawData, 'should see one data event')
-    t.end()
-  })
 
-  c.write('hel')
+  let sawWriteCB = false
+  c.write('hel', () => {
+    t.equal(sawWriteCB, false, 'see write cb only one time')
+    sawWriteCB = true
+  })
   c.write(Buffer.from('lo,'))
   c.write(Buffer.from(' wo').toString('hex'), 'hex')
-  c.write('rld')
+  c.write('rld', 'utf8')
   c.write('\n')
-  c.end()
+  c.end(() => {
+    t.ok(sawData, 'should see one data event')
+    t.ok(sawWriteCB, 'saw write cb')
+    t.end()
+  })
 })
 
 t.test('writes with full end()', t => {
@@ -31,16 +35,15 @@ t.test('writes with full end()', t => {
     sawData = true
     t.equal(data.toString(), 'hello, world\n')
   })
-  c.on('end', () => {
-    t.ok(sawData, 'should see one data event')
-    t.end()
-  })
 
   c.write('hel')
   c.write('lo,')
   c.write(' wo')
   c.write('rld')
-  c.end('\n')
+  c.end('\n', () => {
+    t.ok(sawData, 'should see one data event')
+    t.end()
+  })
 })
 
 t.test('collect what passes through, empty end', t => {
@@ -53,7 +56,6 @@ t.test('collect what passes through, empty end', t => {
   })
   c.on('end', () => {
     t.ok(sawData, 'should see one data event')
-    t.end()
   })
 
   const p = new PassThrough()
@@ -63,12 +65,19 @@ t.test('collect what passes through, empty end', t => {
 
   p.pipe(c)
 
-  p.write('hel')
+  let sawWriteCB = false
+  p.write('hel', () => {
+    t.equal(sawWriteCB, false, 'see write cb only one time')
+    sawWriteCB = true
+  })
   p.write(Buffer.from('lo,'))
   p.write(Buffer.from(' wo').toString('hex'), 'hex')
   p.write('rld')
   p.write('\n')
-  p.end()
+  p.end(() => {
+    t.equal(sawWriteCB, true, 'saw write cb')
+    t.end()
+  })
 })
 
 t.test('collect what passes through, empty end', t => {
@@ -79,10 +88,7 @@ t.test('collect what passes through, empty end', t => {
     sawData = true
     t.equal(data.toString(), 'hello, world\n')
   })
-  c.on('end', () => {
-    t.ok(sawData, 'should see one data event')
-    t.end()
-  })
+  c.on('end', () => t.ok(sawData, 'should see one data event'))
 
   const p = new PassThrough()
   p.on('collect', data => {
@@ -94,5 +100,5 @@ t.test('collect what passes through, empty end', t => {
   p.write('lo,')
   p.write(' wo')
   p.write('rld')
-  p.end('\n')
+  p.end('\n', () => t.end())
 })

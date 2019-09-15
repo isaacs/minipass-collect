@@ -7,18 +7,30 @@ class Collect extends Minipass {
     this[_data] = []
     this[_length] = 0
   }
-  write (chunk, enc) {
-    const c = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, enc)
+  write (chunk, encoding, cb) {
+    if (typeof encoding === 'function')
+      cb = encoding, encoding = 'utf8'
+
+    if (!encoding)
+      encoding = 'utf8'
+
+    const c = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, encoding)
     this[_data].push(c)
     this[_length] += c.length
+    if (cb)
+      cb()
     return true
   }
-  end (chunk, enc) {
-    if (chunk || enc)
-      this.write(chunk, enc)
+  end (chunk, encoding, cb) {
+    if (typeof chunk === 'function')
+      cb = chunk, chunk = null
+    if (typeof encoding === 'function')
+      cb = encoding, encoding = 'utf8'
+    if (chunk)
+      this.write(chunk, encoding)
     const result = Buffer.concat(this[_data], this[_length])
     super.write(result)
-    return super.end()
+    return super.end(cb)
   }
 }
 module.exports = Collect
@@ -32,18 +44,28 @@ class CollectPassThrough extends Minipass {
     this[_data] = []
     this[_length] = 0
   }
-  write (chunk, enc) {
-    const c = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, enc)
+  write (chunk, encoding, cb) {
+    if (typeof encoding === 'function')
+      cb = encoding, encoding = 'utf8'
+
+    if (!encoding)
+      encoding = 'utf8'
+
+    const c = Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk, encoding)
     this[_data].push(c)
     this[_length] += c.length
-    return super.write(chunk, enc)
+    return super.write(chunk, encoding, cb)
   }
-  end (chunk, enc) {
-    if (chunk || enc)
-      this.write(chunk, enc)
+  end (chunk, encoding, cb) {
+    if (typeof chunk === 'function')
+      cb = chunk, chunk = null
+    if (typeof encoding === 'function')
+      cb = encoding, encoding = 'utf8'
+    if (chunk)
+      this.write(chunk, encoding)
     const result = Buffer.concat(this[_data], this[_length])
     this.emit('collect', result)
-    return super.end()
+    return super.end(cb)
   }
 }
 module.exports.PassThrough = CollectPassThrough
