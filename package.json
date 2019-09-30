@@ -15,10 +15,10 @@
     "check-coverage": true
   },
   "devDependencies": {
-    "tap": "^14.6.4"
+    "tap": "^14.6.9"
   },
   "dependencies": {
-    "minipass": "^2.5.1"
+    "minipass": "^3.0.0"
   },
   "files": [
     "index.js"
