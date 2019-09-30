@@ -1,6 +1,6 @@
 {
   "name": "minipass-collect",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A Minipass stream that collects all the data into a single chunk",
   "author": "Isaac Z. Schlueter <i@izs.me> (https://izs.me)",
   "license": "ISC",
